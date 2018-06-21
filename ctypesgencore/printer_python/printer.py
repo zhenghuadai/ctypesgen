@@ -164,12 +164,15 @@ class WrapperPrinter:
     def print_struct(self, struct):
         self.srcinfo(struct.src)
         base = {'union': 'Union', 'struct': 'Structure'}[struct.variety]
-        print >>self.file, 'class %s_%s(%s):' % \
-            (struct.variety, struct.tag, base)
-        print >>self.file, '    pass'
+        #print >>self.file, 'class %s_%s(%s):' % \
+        #    (struct.variety, struct.tag, base)
+        #print >>self.file, '    pass'
 
     def print_struct_members(self, struct):
         if struct.opaque: return
+
+        base = {'union': 'Union', 'struct': 'Structure'}[struct.variety]
+
 
         # handle unnamed fields.
         unnamed_fields = []
@@ -189,6 +192,21 @@ class WrapperPrinter:
                 unnamed_fields.append(name)
                 struct.members[mi] = mem
 
+        print >>self.file, 'class %s_%s(%s):' % \
+            (struct.variety, struct.tag, base)
+
+        print >>self.file, '    _fields_ = [' 
+        for name,ctype in struct.members:
+            if isinstance(ctype,CtypesBitfield):
+                print >>self.file, "        ('%s', %s, %s)," % \
+                    (name, ctype.py_string(), ctype.bitfield.py_string(False))
+            else:
+                print >>self.file, "        ('%s', %s)," % (name, ctype.py_string())
+                #print >>self.file, "        ('%s', %s, %s)," % \
+                #    (name, ctype.py_string(), ctype.bitfield.py_string(False))
+        print >>self.file, '    ]'
+
+	'''
         print >>self.file, '%s_%s.__slots__ = [' % (struct.variety, struct.tag)
         for name,ctype in struct.members:
             print >>self.file, "    '%s'," % name
@@ -200,15 +218,7 @@ class WrapperPrinter:
             for name in unnamed_fields:
                 print >>self.file, "    '%s'," % name
             print >>self.file, ']'
-
-        print >>self.file, '%s_%s._fields_ = [' % (struct.variety, struct.tag)
-        for name,ctype in struct.members:
-            if isinstance(ctype,CtypesBitfield):
-                print >>self.file, "    ('%s', %s, %s)," % \
-                    (name, ctype.py_string(), ctype.bitfield.py_string(False))
-            else:
-                print >>self.file, "    ('%s', %s)," % (name, ctype.py_string())
-        print >>self.file, ']'
+	'''
 
     def print_enum(self,enum):
         print >>self.file, 'enum_%s = c_int' % enum.tag,
