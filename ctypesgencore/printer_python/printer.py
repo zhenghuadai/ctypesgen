@@ -195,7 +195,7 @@ class WrapperPrinter:
         print >>self.file, 'class %s_%s(%s):' % \
             (struct.variety, struct.tag, base)
 
-        print >>self.file, '    _fields_ = [' 
+        print >>self.file, '    _fields_ = ['
         for name,ctype in struct.members:
             if isinstance(ctype,CtypesBitfield):
                 print >>self.file, "        ('%s', %s, %s)," % \

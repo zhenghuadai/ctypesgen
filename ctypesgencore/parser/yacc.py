@@ -1547,11 +1547,11 @@ def traverse(x,N,stack,F,X,R,FP):
         for a in F.get(y,[]):
             if a not in F[x]: F[x].append(a)
     if N[x] == d:
-        N[stack[-1]] = sys.maxint
+        N[stack[-1]] = sys.maxsize
         F[stack[-1]] = F[x]
         element = stack.pop()
         while element != x:
-            N[stack[-1]] = sys.maxint
+            N[stack[-1]] = sys.maxsize
             F[stack[-1]] = F[x]
             element = stack.pop()
 
