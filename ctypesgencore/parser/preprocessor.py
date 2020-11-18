@@ -129,7 +129,9 @@ class PreprocessorParser(object):
         """Parse a file and save its output"""
 
         cmd = self.options.cpp
-        cmd += " -U __GNUC__ -dD"
+        #cmd += " -U __GNUC__ -dD"
+        cmd += " -U __GNUC__ "
+
 
         # This fixes Issue #6 where OS X 10.6+ adds a C extension that breaks
         # the parser.  Blocks shouldn't be needed for ctypesgen support anyway.

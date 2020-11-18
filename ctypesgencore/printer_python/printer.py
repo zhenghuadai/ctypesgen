@@ -35,7 +35,7 @@ class WrapperPrinter:
         self.print_group(self.options.libraries,"libraries",self.print_library)
         self.print_group(self.options.modules,"modules",self.print_module)
 
-        method_table = {
+        self.method_table = {
             'function': self.print_function,
             'macro': self.print_macro,
             'struct': self.print_struct,
@@ -48,7 +48,7 @@ class WrapperPrinter:
 
         for kind,desc in data.output_order:
             if desc.included:
-                method_table[kind](desc)
+                self.method_table[kind](desc)
                 print >>self.file
 
         self.print_group(self.options.inserted_files,"inserted files",
@@ -168,11 +168,14 @@ class WrapperPrinter:
         #    (struct.variety, struct.tag, base)
         #print >>self.file, '    pass'
 
-    def print_struct_members(self, struct):
+    def print_struct_members(self, struct, level = 0):
         if struct.opaque: return
+        if struct.tag.startswith("anon_")  and level == 0: return
+        depends = [ v for v in struct.requirements if v != struct]
 
         base = {'union': 'Union', 'struct': 'Structure'}[struct.variety]
 
+        indents = " " * (level*4)
 
         # handle unnamed fields.
         unnamed_fields = []
@@ -192,19 +195,22 @@ class WrapperPrinter:
                 unnamed_fields.append(name)
                 struct.members[mi] = mem
 
-        print >>self.file, 'class %s_%s(%s):' % \
-            (struct.variety, struct.tag, base)
+        print >>self.file, '%sclass %s_%s (%s):' % \
+            (indents, struct.variety, struct.tag, base)
 
-        print >>self.file, '    _fields_ = ['
+        for depend in depends:
+            self.print_struct_members(depend, level+1)
+
+        print >>self.file, '%s    _fields_ = ['%indents
         for name,ctype in struct.members:
             if isinstance(ctype,CtypesBitfield):
-                print >>self.file, "        ('%s', %s, %s)," % \
-                    (name, ctype.py_string(), ctype.bitfield.py_string(False))
+                print >>self.file, "%s        ('%s', %s, %s)," % \
+                    (indents, name, ctype.py_string(), ctype.bitfield.py_string(False))
             else:
-                print >>self.file, "        ('%s', %s)," % (name, ctype.py_string())
+                print >>self.file, "%s        ('%s', %s)," % (indents, name, ctype.py_string())
                 #print >>self.file, "        ('%s', %s, %s)," % \
                 #    (name, ctype.py_string(), ctype.bitfield.py_string(False))
-        print >>self.file, '    ]'
+        print >>self.file, '%s    ]' % indents
 
 	'''
         print >>self.file, '%s_%s.__slots__ = [' % (struct.variety, struct.tag)
